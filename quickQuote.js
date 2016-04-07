@@ -225,8 +225,11 @@ function initializeQuickQuote() {
 	  /*
    * getSmileyCode() - returns smiley code
    */
-  function getSmileyCode(img){
-    if (!img.src.match(/^http:\/\/thedndsanctuary\.eu\/Smileys\/(default|myopera)\/(\w+)\.gif$/))
+  function getSmileyCode(img) {
+		var re = '^' + location.protocol + '\/\/' + location.hostname + '.+' + '\/smileys\/\\w+\/(\\w+)\\.gif$';
+		re = re.replace(/\//g, '\\/')
+		re = new RegExp(re);
+    if (!img.src.match(re))
       return ''; // Event not spawned by a forum smiley (else match smiley name below)
      
 		else {
