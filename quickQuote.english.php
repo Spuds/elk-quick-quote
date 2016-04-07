@@ -1,3 +1,3 @@
 <?php
 
-$txt['quick_quote'] = 'Quick quote';
+$txt['quick_quote'] = 'Quick Quote';

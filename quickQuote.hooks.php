@@ -13,7 +13,8 @@ function QQ_integrate_load_theme()
 {
 	global $txt, $modSettings;
 
-	addInlineJavascript('		
+	loadLanguage('quickQuote');
+	addInlineJavascript('
 		quickQuote.txt = ' . $txt['quick_quote'] . ';', true);
 
 	loadJavascriptFile('quickQuote.js');
