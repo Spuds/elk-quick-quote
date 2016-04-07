@@ -15,7 +15,7 @@ function QQ_integrate_load_theme()
 
 	loadLanguage('quickQuote');
 	addInlineJavascript('
-		quickQuote.txt = ' . $txt['quick_quote'] . ';', true);
+		quickQuote.txt = \'' . $txt['quick_quote'] . '\';', true);
 
 	loadJavascriptFile('quickQuote.js');
 }
