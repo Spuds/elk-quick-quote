@@ -263,15 +263,13 @@ function initializeQuickQuote() {
 	 * getSmileyCode() - returns smiley code
 	 */
 	function getSmileyCode(img) {
-		var re = '^' + location.protocol + '\/\/' + location.hostname + '.+' + '\/smileys\/\\w+\/(\\w+)\\.gif$';
-		re = re.replace(/\//g, '\\/');
-		re = new RegExp(re);
-		if (!img.src.match(re)) {
-			return ''; // Event not spawned by a forum smiley (else match smiley name below)
-		}
-		else {
+		if (img.alt && img.className && img.className === 'smiley') {
 			// Alternative text corresponds to smiley code.
 			return img.alt;
+		}
+		else {
+			// Event not spawned by a forum smiley (else match smiley name below)
+			return '';
 		}
 
 /*
@@ -295,7 +293,7 @@ function initializeQuickQuote() {
 		if (selection) {
 			var selectionAncestor = selection.commonAncestorContainer;
 			var selectionContents;
-			var postAncestor = selectionAncestor.selectSingleNode('ancestor-or-self::div[contains(@class,"post")]');
+			var postAncestor = selectionAncestor.selectSingleNode('ancestor-or-self::div[contains(@class,"inner")]');
 			setHiddenFlag(selectionAncestor);
 
 			if (selectionAncestor.nodeType != 3 && selectionAncestor.nodeType != 4)
@@ -318,7 +316,6 @@ function initializeQuickQuote() {
 					selectionContents = newSelectionContents;
 				}
 			}
-
 			var selectedText = trim(treeToBBCode(selectionContents));
 
 			//if( selectedText ){
