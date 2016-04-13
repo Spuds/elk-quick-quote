@@ -320,14 +320,21 @@ function initializeQuickQuote() {
 
 			//if( selectedText ){
 				//var textarea = rule.getDestination();
-			var textarea = document.querySelector('#postmodify').message;
-			var newText = (textarea.value?textarea.value+'\n':'') +
-				startTag+selectedText+endTag+'\n';
-			textarea.value = newText;
-			newText = textarea.value;//reading again, to get normalized white-space
-			textarea.setSelectionRange(newText.length,newText.length);
-			textarea.blur(); //needed for Webkit/Blink
-			textarea.focus();
+			if (oQuickReply.bIsFull) {
+				// full editor in quick reply
+				$editor_data[post_box_name].insert(startTag+selectedText+endTag);
+			}
+			else {
+				// just the textarea
+				var textarea = document.querySelector('#postmodify').message;
+				var newText = (textarea.value?textarea.value+'\n':'') +
+					startTag+selectedText+endTag+'\n';
+				textarea.value = newText;
+				newText = textarea.value;//reading again, to get normalized white-space
+				textarea.setSelectionRange(newText.length,newText.length);
+				textarea.blur(); //needed for Webkit/Blink
+				textarea.focus();
+			}
 		}
 		else{
 				this._warning.style.display='block';
