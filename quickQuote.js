@@ -344,6 +344,11 @@ function initializeQuickQuote() {
 		}
 	}
 
+	function findAncestor (el, cls) {
+		while ((el = el.parentNode) && el.className.indexOf(cls) < 0);
+		return el;
+	}
+
 	var quotebuttons = document.querySelectorAll('.quote_button');
 	
 	for (var i=0; i<quotebuttons.length; i++) {
@@ -355,9 +360,11 @@ function initializeQuickQuote() {
 		link.href = '';
 		link.textContent = (typeof quickQuote !== 'undefined' && typeof quickQuote.txt !== 'undefined') ? quickQuote.txt : 'Quick Quote';
 
-		var username = (quotebuttons[i].parentNode.parentNode.parentNode.previousElementSibling.querySelector('.name').textContent).trim();
+		var postarea = findAncestor(quotebutton, "postarea");
+
+		var username = (postarea.previousElementSibling.querySelector('.name').textContent).trim();
 		var quote_msg = 'msg=' + quotebutton.href.split('?')[1].split(';')[1].split('=')[1];
-		var time_unix = quotebutton.parentNode.parentNode.parentNode.querySelector('time').getAttribute('data-timestamp');
+		var time_unix = postarea.querySelector('time').getAttribute('data-timestamp');
 
 		link.startTag = '[quote'+(username?' author='+username:'')+((quote_msg&&time_unix)?' link='+quote_msg+' date='+time_unix:'')+']';
 		link.endTag = '[/quote]';

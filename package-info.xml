@@ -3,9 +3,9 @@
 <package-info xmlns="http://www.elkarte.net/site/package-info" xmlns:elk="http://www.elkarte.net/">
 	<id>Frenzie:quick_quote</id>
 	<name>Quick Quote</name>
-	<version>0.2</version>
+	<version>0.4</version>
 	<type>addon</type>
-	<install for="1.0 - 1.0.99">
+	<install for="1.0 - 1.1.99">
 		<readme parsebbc="true">readme.txt</readme>
 		<license type="inline">This ElkArte addon is released under a BSD license</license>
 		<require-file name="quickQuote.hooks.php" destination="SUBSDIR">Integration hooks</require-file>
@@ -14,7 +14,7 @@
 		<hook hook="integrate_load_theme" file="SUBSDIR/quickQuote.hooks.php" function="QQ_integrate_load_theme" />
 	</install>
 
-	<uninstall for="1.0 - 1.0.99">
+	<uninstall for="1.0 - 1.1.99">
 		<hook reverse="true" hook="integrate_load_theme" file="SUBSDIR/quickQuote.hooks.php" function="QQ_integrate_load_theme" />
 		<remove-file name="SUBSDIR/quickQuote.hooks.php" />
 		<remove-file name="THEMEDIR/scripts/quickQuote.js" />
