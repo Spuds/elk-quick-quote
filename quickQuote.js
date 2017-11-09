@@ -20,6 +20,11 @@ if ((typeof Node != 'undefined') && !document.selectNodes) {
 function initializeQuickQuote() {
 	'use strict';
 
+	// early exit on PM page
+	if (document.querySelector('#personal_messages')) {
+		return;
+	}
+
 	/*
 	 * setHiddenFlag() - transverses tree under node and set a flag telling whether element is hidden or not
 	 */
