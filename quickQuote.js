@@ -215,12 +215,7 @@ function initializeQuickQuote()
 							break;
 						case 'ul':
 							props = [
-								{
-									name: 'listStyleType',
-									forceValue: 'decimal',
-									before: '[list type=decimal]',
-									after: '[/list]'
-								},
+								{name: 'listStyleType', forceValue: 'decimal', before: '[list type=decimal]', after: '[/list]'},
 							];
 							checked = checkCSSProps(node, props);
 
@@ -343,9 +338,9 @@ function initializeQuickQuote()
 	 */
 	function getSmileyCode(img)
 	{
-		if (img.alt && img.className && img.className === 'smiley')
+		if (img.alt && img.className && img.classList.contains('smiley'))
 		{
-			// Alternative text corresponds to smiley code.
+			// Alternative text corresponds to smiley and emoji code
 			return img.alt;
 		}
 
