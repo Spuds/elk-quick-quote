@@ -78,7 +78,6 @@ function initializeQuickQuote()
 			let compStyles = getComputedStyle(node, '');
 
 			if (node.nodeName.toLowerCase() === 'br') return '';
-			if (node.classList.contains('hide')) return 'class';
 			if (compStyles.display === 'none') return 'display:none';
 			if (compStyles.visibility === 'hidden') return 'visibility:hidden';
 			if (parseFloat(compStyles.opacity) < 0.1) return 'opacity';
@@ -154,7 +153,7 @@ function initializeQuickQuote()
 
 		if (node.getAttribute && node.getAttribute('userjsishidden') === 'true')
 		{
-			return;
+			return '';
 		}
 
 		switch (node.nodeType)
@@ -197,9 +196,22 @@ function initializeQuickQuote()
 							}
 							break;
 						case 'div':
+							let ns = node.nextElementSibling || node.nextSibling;
+
+							// Detect quote
+							if (node.classList.contains("quoteheader") &&
+								ns &&
+								ns.nodeName.toLowerCase() === 'blockquote' &&
+								ns.classList.contains("bbc_quote"))
+							{
+								// Get the quote author we are quoting the quote of
+								ns.__userNameQuoted = node.textContent.split(':')[1].split(String.fromCharCode(160))[0].trim();
+								break;
+							}
+
 							props = [
-								{name: 'text-align', forceValue: 'left', before: '[left]', after: '[/left]'},
-								{name: 'text-align', forceValue: 'right', before: '[right]', after: '[/right]'},
+								{name: 'textAlign', forceValue: 'left', before: '[left]', after: '[/left]'},
+								{name: 'textAlign', forceValue: 'right', before: '[right]', after: '[/right]'},
 								{name: 'centertext', before: '[center]', after: '[/center]', isClass: true},
 							];
 							checked = checkCSSProps(node, props);
@@ -207,6 +219,7 @@ function initializeQuickQuote()
 							bb.push(checked.start);
 							bb.push(treeToBBCode(node.childNodes));
 							bb.push(checked.end);
+
 							break;
 						case 'img':
 							let smileyCode = getSmileyCode(node);
@@ -257,28 +270,15 @@ function initializeQuickQuote()
 							bb.push(end);
 							break;
 						case 'p':
-							let ns = node.nextElementSibling || node.nextSibling;
+							bb.push(treeToBBCode(node.childNodes));
 
-							// Detect quote
-							if (node.className.indexOf("cite") >= 0 &&
-								ns &&
-								ns.nodeName.toLowerCase() === 'blockquote' &&
-								ns.className.indexOf("bbquote") >= 0)
-							{
-								// @TODO: user quote - this will break when the forums get localized !
-								ns.__userNameQuoted = node.textContent.replace(/.*originally\s+posted\s+by\s+/i, '').replace(/\s*\:$/, '');
-							}
-							else
-							{
-								bb.push(treeToBBCode(node.childNodes));
-							}
 							break;
 						case 'blockquote':
-							if (node.className.indexOf("bbquote") >= 0)
+							if (node.classList.contains("bbc_quote"))
 							{
-								bb.push('[QUOTE' + (node.__userNameQuoted ? '=' + node.__userNameQuoted : '') + ']');
+								bb.push('[quote' + (node.__userNameQuoted ? ' author=' + node.__userNameQuoted : '') + ']');
 								bb.push(treeToBBCode(node.childNodes));
-								bb.push('[/QUOTE]');
+								bb.push('[/quote]');
 							}
 							else
 							{
@@ -314,8 +314,8 @@ function initializeQuickQuote()
 	 * trim()
 	 * Trim string
 	 *
-	 * @param str
-	 * @param charToReplace
+	 * @param {string} str
+	 * @param {string|null} charToReplace
 	 * @returns {string}
 	 */
 	function trim(str, charToReplace = null)
@@ -333,8 +333,8 @@ function initializeQuickQuote()
 	 * getSmileyCode()
 	 * Returns smiley code
 	 *
-	 * @param img
-	 * @returns {string|*}
+	 * @param {Object} img
+	 * @returns {string}
 	 */
 	function getSmileyCode(img)
 	{
@@ -375,6 +375,7 @@ function initializeQuickQuote()
 		{
 			let selectionAncestor = selection.commonAncestorContainer,
 				selectionContents,
+				quoteHeader,
 				postAncestor = document.evaluate('ancestor-or-self::section[contains(@class,"messageContent")]', selectionAncestor, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
 
 			setHiddenFlag(selectionAncestor);
@@ -395,15 +396,31 @@ function initializeQuickQuote()
 			{
 				// Clone tree upwards. Some BBCode requires more context
 				// than just the current node, like lists.
+				let newSelectionContents;
 				while (selectionAncestor !== postAncestor)
 				{
 					selectionAncestor = selectionAncestor.parentNode;
 
-					let newSelectionContents = selectionAncestor.cloneNode(false);
+					// In ElkArte quoteheader and quote are siblings, not on a shared tree branch
+					if (selectionAncestor.nodeName.toLowerCase() === 'blockquote' &&
+						selectionAncestor.classList.contains('bbc_quote'))
+					{
+						quoteHeader = selectionAncestor.previousSibling.cloneNode(true);
+					}
+
+					newSelectionContents = selectionAncestor.cloneNode(false);
 
 					newSelectionContents.appendChild(selectionContents);
+
 					selectionContents = newSelectionContents;
 				}
+			}
+
+			// If there was a quote header, insert it before the quote in this fragment, yielding
+			// <section><quoteheader><a></a></quoteheader><blockquote></blockquote></section>
+			if (quoteHeader)
+			{
+				selectionContents.insertBefore(quoteHeader, selectionContents.firstChild);
 			}
 
 			let selectedText = trim(treeToBBCode(selectionContents));
