@@ -68,7 +68,7 @@ function initializeQuickQuote()
 	 * isHidden()
 	 * Tells if element should be considered as not visible
 	 *
-	 * @param node
+	 * @param {Node} node
 	 * @returns {string}
 	 */
 	function isHidden(node)
@@ -106,7 +106,16 @@ function initializeQuickQuote()
 
 		props.forEach((prop) =>
 		{
-			value = trim(node.style[prop.name] || '', ' "');
+			// Check for class name
+			if (typeof prop.isClass !== 'undefined')
+			{
+				value = node.classList.contains(prop.name) ? prop.name : '';
+			}
+			// Or style attribute
+			else
+			{
+				value = trim(node.style[prop.name] || '', ' "');
+			}
 
 			if ((prop.forceValue && value === prop.forceValue) || (!prop.forceValue && value))
 			{
@@ -188,8 +197,9 @@ function initializeQuickQuote()
 							break;
 						case 'div':
 							props = [
-								{name: 'textAlign', forceValue: 'left', before: '[align=left]', after: '[/align]'},
-								{name: 'textAlign', forceValue: 'right', before: '[align=right]', after: '[/align]'},
+								{name: 'text-align', forceValue: 'left', before: '[left]', after: '[/left]'},
+								{name: 'text-align', forceValue: 'right', before: '[right]', after: '[/right]'},
+								{name: 'centertext', before: '[center]', after: '[/center]', isClass: true},
 							];
 							checked = checkCSSProps(node, props);
 
@@ -230,6 +240,7 @@ function initializeQuickQuote()
 								{name: 'textDecoration', forceValue: 'underline', before: '[u]', after: '[/u]'},
 								{name: 'color', before: '[color=@value]', after: '[/color]'},
 								{name: 'fontFamily', before: '[font=@value]', after: '[/font]'},
+								{name: 'bbc_tt', before: '[tt]', after: '[/tt]', isClass: true},
 								{name: 'fontSize', before: '[size=@value]', after: '[/size]', values: {
 										'xx-small': 1,
 										'x-small': 2,
@@ -244,21 +255,6 @@ function initializeQuickQuote()
 							checked = checkCSSProps(node, props);
 							start = checked.start;
 							end = checked.end;
-
-							// Check for class attribute
-							props = [
-								{name: 'centertext', before: '[align=center]', after: '[/align]'},
-								{name: 'bbc_tt', before: '[tt]', after: '[/tt]'},
-							];
-
-							props.forEach((prop) =>
-							{
-								if (node.className.indexOf(prop.name) >= 0)
-								{
-									start += prop.before;
-									end += prop.after;
-								}
-							});
 
 							bb.push(start);
 							bb.push(treeToBBCode(node.childNodes));
