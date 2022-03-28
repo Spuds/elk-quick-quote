@@ -78,6 +78,7 @@ function initializeQuickQuote()
 			let compStyles = getComputedStyle(node, '');
 
 			if (node.nodeName.toLowerCase() === 'br') return '';
+			if (node.classList.contains('hide')) return 'class';
 			if (compStyles.display === 'none') return 'display:none';
 			if (compStyles.visibility === 'hidden') return 'visibility:hidden';
 			if (parseFloat(compStyles.opacity) < 0.1) return 'opacity';
