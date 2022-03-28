@@ -448,11 +448,12 @@ function initializeQuickQuote()
 		}
 		else
 		{
-			this._warning.classList.remove('hide');
+			e.target._warning.classList.remove('hide');
 			setTimeout(function (warning)
 			{
-				warning.classList.add('hide');
-			}, 1000, this._warning);
+				e.target._warning.classList.add('hide');
+				e.target.blur();
+			}, 1000, e);
 		}
 	}
 
