@@ -27,7 +27,6 @@ function initializeQuickQuote()
 	};
 
 	/**
-	 * setHiddenFlag()
 	 * Transverses tree under node and set a flag telling whether element is hidden or not
 	 *
 	 * @param {object} node
@@ -65,7 +64,6 @@ function initializeQuickQuote()
 	}
 
 	/**
-	 * isHidden()
 	 * Tells if element should be considered as not visible
 	 *
 	 * @param {Node} node
@@ -91,7 +89,6 @@ function initializeQuickQuote()
 	}
 
 	/**
-	 * checkCSSProps()
 	 * Compares CSS properties against a predefined array
 	 *
 	 * @param {object} node
@@ -128,7 +125,6 @@ function initializeQuickQuote()
 	}
 
 	/**
-	 * treeToBBCode()
 	 * Parses the tree into bbcode
 	 *
 	 * @param {object} node
@@ -160,8 +156,8 @@ function initializeQuickQuote()
 		{
 			// nodeType 1, like div, p, ul
 			case Node.ELEMENT_NODE:
-				let nname = node.nodeName.toLowerCase(),
-					def = treeToBBCode.defaults[nname];
+				let nodeName = node.nodeName.toLowerCase(),
+					def = treeToBBCode.defaults[nodeName];
 
 				// Generic wrap behavior for basic BBC tags like [b], [i], [u]
 				if (def)
@@ -173,7 +169,7 @@ function initializeQuickQuote()
 				// Special Processing cases
 				else
 				{
-					switch (nname)
+					switch (nodeName)
 					{
 						case 'a':
 							if (node.href.indexOf('mailto:') === 0)
@@ -184,9 +180,9 @@ function initializeQuickQuote()
 							}
 							else if (node.className.indexOf("attach") >= 0)
 							{
-								bb.push('[ATTACH=' + node.href + ']');
+								bb.push('[attach=' + node.href + ']');
 								bb.push(treeToBBCode(node.childNodes));
-								bb.push('[/ATTACH]');
+								bb.push('[/attach]');
 							}
 							else
 							{
@@ -196,19 +192,6 @@ function initializeQuickQuote()
 							}
 							break;
 						case 'div':
-							let ns = node.nextElementSibling || node.nextSibling;
-
-							// Detect quote
-							if (node.classList.contains("quoteheader") &&
-								ns &&
-								ns.nodeName.toLowerCase() === 'blockquote' &&
-								ns.classList.contains("bbc_quote"))
-							{
-								// Get the quote author we are quoting the quote of
-								ns.__userNameQuoted = node.textContent.split(':')[1].split(String.fromCharCode(160))[0].trim();
-								break;
-							}
-
 							props = [
 								{name: 'textAlign', forceValue: 'left', before: '[left]', after: '[/left]'},
 								{name: 'textAlign', forceValue: 'right', before: '[right]', after: '[/right]'},
@@ -219,7 +202,6 @@ function initializeQuickQuote()
 							bb.push(checked.start);
 							bb.push(treeToBBCode(node.childNodes));
 							bb.push(checked.end);
-
 							break;
 						case 'img':
 							let smileyCode = getSmileyCode(node);
@@ -271,14 +253,36 @@ function initializeQuickQuote()
 							break;
 						case 'p':
 							bb.push(treeToBBCode(node.childNodes));
+							break;
+						case 'cite':
+							let nc = node.firstChild,
+								ns = node.nextSibling;
 
+							// Add the author, date, message information to the blockquote props
+							if (nc &&
+								ns &&
+								nc.nodeName.toLowerCase() === 'a' &&
+								ns.nodeName.toLowerCase() === 'blockquote')
+							{
+								ns.__userNameQuoted = node.textContent.split(':')[1].split(String.fromCharCode(160))[0].trim();
+								ns.__link = new URL(nc.getAttribute('href')).search.substring(1);
+
+								let when = nc.querySelector('time');
+								if (when !== null)
+								{
+									ns.__timedate = when.getAttribute('data-timestamp');
+								}
+							}
 							break;
 						case 'blockquote':
 							if (node.classList.contains("bbc_quote"))
 							{
-								bb.push('[quote' + (node.__userNameQuoted ? ' author=' + node.__userNameQuoted : '') + ']');
+								bb.push('[quote' +
+									(node.__userNameQuoted ? ' author=' + node.__userNameQuoted : '') +
+									(node.__link ? ' link=' + node.__link : '') +
+									(node.__timedate ? ' date=' + node.__timedate : '') + ']');
 								bb.push(treeToBBCode(node.childNodes));
-								bb.push('[/quote]');
+								bb.push('[/quote]' + "\n");
 							}
 							else
 							{
@@ -307,12 +311,12 @@ function initializeQuickQuote()
 				bb.push(text);
 				break;
 		}
+
 		return bb.join('');
 	}
 
 	/**
-	 * trim()
-	 * Trim string
+	 * Trim string by whitespace or specific characters
 	 *
 	 * @param {string} str
 	 * @param {string|null} charToReplace
@@ -330,7 +334,6 @@ function initializeQuickQuote()
 	}
 
 	/**
-	 * getSmileyCode()
 	 * Returns smiley code
 	 *
 	 * @param {Object} img
@@ -360,7 +363,7 @@ function initializeQuickQuote()
 	/**
 	 * Called when the quick quote button is pressed, passed a PointerEvent
 	 *
-	 * @param {PointerEvent }e
+	 * @param {PointerEvent} e
 	 */
 	function executeQuickQuote(e)
 	{
@@ -401,11 +404,13 @@ function initializeQuickQuote()
 				{
 					selectionAncestor = selectionAncestor.parentNode;
 
-					// In ElkArte quoteheader and quote are siblings, not on a shared tree branch
+					// In ElkArte blockquote and cite are parent/child, however we shift this
+					// such that they are siblings in the clone, makes parsing easier
 					if (selectionAncestor.nodeName.toLowerCase() === 'blockquote' &&
 						selectionAncestor.classList.contains('bbc_quote'))
 					{
-						quoteHeader = selectionAncestor.previousSibling.cloneNode(true);
+						// Go deep so we get all the details
+						quoteHeader = selectionAncestor.firstChild.cloneNode(true);
 					}
 
 					newSelectionContents = selectionAncestor.cloneNode(false);
@@ -416,8 +421,9 @@ function initializeQuickQuote()
 				}
 			}
 
-			// If there was a quote header, insert it before the quote in this fragment, yielding
-			// <section><quoteheader><a></a></quoteheader><blockquote></blockquote></section>
+			// If there was a blockquote cite, insert it before the blockquote in this fragment, yielding
+			// <section><cite><a></a></cite><blockquote></blockquote></section> This allows
+			// us to parse cite information before we process the actual blockquote
 			if (quoteHeader)
 			{
 				selectionContents.insertBefore(quoteHeader, selectionContents.firstChild);
@@ -425,8 +431,6 @@ function initializeQuickQuote()
 
 			let selectedText = trim(treeToBBCode(selectionContents));
 
-			// if( selectedText ){
-			// var textarea = rule.getDestination();
 			if (typeof oQuickReply === 'undefined' || oQuickReply.bIsFull)
 			{
 				// Full editor in quick reply
@@ -508,10 +512,11 @@ function initializeQuickQuote()
 
 		// Build our quick quote wrapper for this button
 		link.startTag = '[quote' + (username ? ' author=' + username : '') + ((quote_msg && time_unix) ? ' link=' + quote_msg + ' date=' + time_unix : '') + ']';
-		link.endTag = '[/quote]\n';
+		link.endTag = '[/quote]' + "\n";
 
 		// Message when there's no text selected
 		let warning = link.appendChild(document.createElement('span'));
+
 		warning.className = 'warningbox hide';
 		// @todo text string
 		warning.textContent = 'Please select some text !';
